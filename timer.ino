@@ -1,4 +1,3 @@
-
 #include <LiquidCrystal.h>
 LiquidCrystal lcd(12, 11, 5, 4, 3, 2);
 
@@ -6,25 +5,10 @@ int time = 60;
 int blinking_mode = 1;
 int need_blinking_string = 0;
 
-void setup(void) {
-  Serial.begin(9600);
-  lcd.begin(16, 2);
-}
 
 
-String get_blinking_timestamp(){
-    String timestamp = two_digit_format(h) + ":" + "  " + ":" + two_digit_format(s);
-  return timestamp;
-}
-
-String get_normal_timestamp(){
-  String timestamp = two_digit_format(h) + ":" + two_digit_format(m) + ":" + two_digit_format(s);
-  return timestamp;
-}
-
-int[] format_time(){
-  int hms[3];
-  
+int* format_time(){
+  int* hms = (int *)malloc (sizeof (int) * 3);
   int h = 0;
   int m = 0;
   int s = 0;
@@ -39,25 +23,38 @@ int[] format_time(){
   return hms;
 }
 
+void setup(void) {
+  Serial.begin(9600);
+  lcd.begin(16, 2);
+}
+
+
+String get_blinking_timestamp(int h, int m, int s){
+    String timestamp = two_digit_format(h) + ":" + "  " + ":" + two_digit_format(s);
+  return timestamp;
+}
+
+String get_normal_timestamp(int h, int m, int s){
+  String timestamp = two_digit_format(h) + ":" + two_digit_format(m) + ":" + two_digit_format(s);
+  return timestamp;
+}
 
 String get_timestamp()
 {
-
-  int hms[3] = format_time();
-  int h = hms[0];
-  int m = hms[1];
-  int s = hms[2];
+  int *hms = format_time();
+  int h = *hms;
+  int m = *(hms+1);
+  int s = *(hms+2);
 
   if(need_blinking_string){
     need_blinking_string = 0;
-    return get_blinking_timestamp();
+    return get_blinking_timestamp(h,m,s);
   }
   
   need_blinking_string = 1;
-  return get_normal_timestamp();
+  return get_normal_timestamp(h,m,s);
   
 }
-
 
 
 String two_digit_format(int i)
@@ -93,4 +90,3 @@ void loop(void) {
   
   time++;
 }
-
