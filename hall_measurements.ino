@@ -2,11 +2,17 @@
 #include <LiquidCrystal.h>
 LiquidCrystal lcd(12, 11, 5, 4, 3, 2);
 
+int led = 13 ; 
+int analogPin = A0; // linear Hall magnetic sensor analog interface
+int analogHall; 
+int i =0;
+int outputA = 12;
+int outputB = 13;
+
 int time = 60;
 int blinking_mode = 1;
 int need_blinking_string = 0;
 int currentTime[] = {0,0,0}; // HH:MM:SS
-
 
 int watchState = 0; // 0 IDLE, 1 HH,  2 MM
 const int MAX_IDLE_TIME = 5;
@@ -26,8 +32,50 @@ int measurements[10000];
 
 
 void setup(void) {
+  pinMode (led, OUTPUT); 
+  pinMode(analogPin, INPUT);
+  pinMode(outputA, INPUT);
+  pinMode(outputB, INPUT); 
+  Serial.begin(9600);
+  prepare_clock();
   Serial.begin(9600);
   lcd.begin(16, 2);
+}
+
+void loop ()
+{
+}
+
+
+void prepare_clock()
+{
+  // initialize Timer1
+  cli();  // disable global interrupts
+  TCCR1A = 0; // set entire TCCR1A register to 0
+  TCCR1B = 0; // same for TCCR1B
+  
+  // set compare match register to desired timer count:
+  OCR1A = 15624;
+  // turn on CTC mode:
+  TCCR1B |= (1 << WGM12);
+  // Set CS10 and CS12 bits for 1024 prescaler:
+  TCCR1B |= (1 << CS10);
+  TCCR1B |= (1 << CS12);
+  // enable timer compare interrupt:
+  TIMSK1 |= (1 << OCIE1A);
+  // enable global interrupts:
+  sei();
+  
+}
+
+
+ISR(TIMER1_COMPA_vect)
+{
+	increment_time();
+	read_maesurement();
+	manage_states();
+	String timestamp = get_timestamp();
+	display_on_watch(timestamp);
 }
 
 
@@ -164,12 +212,12 @@ read_maesurement(){
 	measurements[time] = analogHall;
 }
 
-String get_blinking_timestamp(){
+String get_blinking_timestamp(int h, int m, int s){
     String timestamp = format_digits(h) + ":" + "  " + ":" + format_digits(s);
   return timestamp;
 }
 
-String get_normal_timestamp(){
+String get_normal_timestamp(int h, int m, int s){
   String timestamp = format_digits(h) + ":" + format_digits(m) + ":" + format_digits(s);
   return timestamp;
 }
@@ -195,16 +243,6 @@ void setup(void) {
   lcd.begin(16, 2);
 }
 
-
-String get_blinking_timestamp(int h, int m, int s){
-    String timestamp = two_digit_format(h) + ":" + "  " + ":" + two_digit_format(s);
-  return timestamp;
-}
-
-String get_normal_timestamp(int h, int m, int s){
-  String timestamp = two_digit_format(h) + ":" + two_digit_format(m) + ":" + two_digit_format(s);
-  return timestamp;
-}
 
 String get_timestamp()
 {
@@ -253,8 +291,6 @@ void display_on_watch(String timestamp){
 
 
 
-
-
 void manage_states(){ 
 
 	if (getRotation() != 0 || isPushButonPressed()){
@@ -286,13 +322,7 @@ void manage_states(){
 	}
 }
 
-void main(){
-	increment_time();
-	read_maesurement();
-	manage_states();
-	String timestamp = get_timestamp();
-	display_on_watch(timestamp);
-}
+
 
 
 
