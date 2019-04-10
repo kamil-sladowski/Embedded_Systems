@@ -1,5 +1,7 @@
-
 #include <LiquidCrystal.h>
+
+
+const int rs = 8, en = 9, d4 = 4, d5 = 5, d6 = 6, d7 = 7;
 LiquidCrystal lcd(12, 11, 5, 4, 3, 2);
 
 int led = 13 ; 
@@ -37,10 +39,10 @@ void setup(void) {
   pinMode(outputA, INPUT);
   pinMode(outputB, INPUT); 
   Serial.begin(9600);
-  prepare_clock();
-  Serial.begin(9600);
   lcd.begin(16, 2);
+  prepare_clock();
 }
+
 
 void loop ()
 {
@@ -72,9 +74,9 @@ void prepare_clock()
 ISR(TIMER1_COMPA_vect)
 {
 	increment_time();
-	read_maesurement();
-	manage_states();
 	String timestamp = get_timestamp();
+	read_maesurement(timestamp);
+	manage_states();
 	display_on_watch(timestamp);
 }
 
@@ -88,16 +90,16 @@ void change_state(){
 
 	if (watchState == 0)
 	{
-	watchState = 1;
+		watchState = 1;
 	}
 
 	else if (watchState == 1)
 	{
-	watchState = 2;
+		watchState = 2;
 	}
 	else if (watchState == 2)
 	{
-	watchState = 0;
+		watchState = 0;
 	}
 }
 
@@ -167,7 +169,7 @@ void increment_hours(){
      } else {
        currentTime[0]--;
      }
-     Serial.print("currentTime[0]: ");
+     Serial.print("current h: ");
      Serial.println(currentTime[0]);
    } 
    lastHourState = hourState;
@@ -185,7 +187,7 @@ void increment_minutes(){
      } else {
        currentTime[1]--;
      }
-     Serial.print("currentTime[1]: ");
+     Serial.print("current minute: ");
      Serial.println(currentTime[1]);
    } 
    lastMinuteState = minuteState;
@@ -200,22 +202,40 @@ void clearSecondsIfAppropiateState(){
 }
 
 
-increment_time(){
+void increment_time(){
 	time++;
 }
 
 
-read_maesurement(){
+void read_maesurement(String timestamp){
 	int analogHall = analogRead(analogPin); 
-    Serial.println("");
-	Serial.println(analogHall);
+    Serial.println("Time  |  Timestamp  |  analogHall");
+	Serial.print(time);
+	Serial.print("  |  ");
+	Serial.print(timestamp);
+	Serial.print("  |  ");
+	Serial.print(analogHall);
+	Serial.println("");
 	measurements[time] = analogHall;
 }
 
+
 String get_blinking_timestamp(int h, int m, int s){
-    String timestamp = format_digits(h) + ":" + "  " + ":" + format_digits(s);
+	String timestamp;
+	switch(watchState){
+		case 0:
+			timestamp = format_digits(h) + ":" + format_digits(m) + ":" + format_digits(s);
+			break;
+		case 1:
+			timestamp = "  " + ":" + format_digits(m) + ":" + format_digits(s);
+			break;
+		case 2:
+			timestamp = format_digits(h) + ":" + "  " + ":" + format_digits(s);
+			break;
+		}
   return timestamp;
 }
+
 
 String get_normal_timestamp(int h, int m, int s){
   String timestamp = format_digits(h) + ":" + format_digits(m) + ":" + format_digits(s);
@@ -238,10 +258,6 @@ int* format_time(){
   return hms;
 }
 
-void setup(void) {
-  Serial.begin(9600);
-  lcd.begin(16, 2);
-}
 
 
 String get_timestamp()
@@ -286,7 +302,6 @@ void display_on_watch(String timestamp){
   lcd.print(timestamp);
   Serial.println(timestamp); 
 }
-
 
 
 
