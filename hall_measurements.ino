@@ -11,12 +11,12 @@ int i =0;
 int outputA = 12;
 int outputB = 13;
 
-int time = 60;
+int time = 60; // todo 0
 int blinking_mode = 1;
 int need_blinking_string = 0;
-int currentTime[] = {0,0,0}; // HH:MM:SS
 
 int watchState = 0; // 0 IDLE, 1 HH,  2 MM
+
 const int MAX_IDLE_TIME = 5;
 int timeInNoneIdleState = 0;
 
@@ -29,8 +29,7 @@ int lastAnyRotationState = 0;
 
 int pushButtonCounter = 0;
 
-int time = 0;
-int measurements[10000];
+int measurements[100000];
 
 
 void setup(void) {
@@ -82,7 +81,8 @@ ISR(TIMER1_COMPA_vect)
 
 
 void clear_seconds(){
-	currentTime[2] = 0;
+	int* hms = format_time();
+	time = time - hms[2];
 }
 
 
@@ -157,7 +157,6 @@ int isPushButonPressedTwice(){
 }
 
 
-
 void increment_hours(){
 	
     hourState = digitalRead(outputA); // Reads the "current" state of the outputA
@@ -165,12 +164,17 @@ void increment_hours(){
    if (hourState != lastHourState){     
      // If the outputB state is different to the outputA state, that means the encoder is rotating clockwise
      if (digitalRead(outputB) != hourState) { 
-       currentTime[0]++;
+     	if (time < 82800){
+  		    time += 3600;
+  		}
      } else {
-       currentTime[0]--;
+     	if (time > 3600){
+       		time -= 3600;
+       	}
      }
-     Serial.print("current h: ");
-     Serial.println(currentTime[0]);
+    
+     Serial.print("current time: ");
+     Serial.println(time);
    } 
    lastHourState = hourState;
 }
@@ -183,12 +187,12 @@ void increment_minutes(){
    if (minuteState != lastMinuteState){     
      // If the outputB state is different to the outputA state, that means the encoder is rotating clockwise
      if (digitalRead(outputB) != minuteState) { 
-       currentTime[1]++;
+       time += 60;
      } else {
-       currentTime[1]--;
+       time -= 60;
      }
-     Serial.print("current minute: ");
-     Serial.println(currentTime[1]);
+     Serial.print("current time: ");
+     Serial.println(time);
    } 
    lastMinuteState = minuteState;
 
@@ -304,8 +308,6 @@ void display_on_watch(String timestamp){
 }
 
 
-
-
 void manage_states(){ 
 
 	if (getRotation() != 0 || isPushButonPressed()){
@@ -336,9 +338,6 @@ void manage_states(){
 		}
 	}
 }
-
-
-
 
 
 
