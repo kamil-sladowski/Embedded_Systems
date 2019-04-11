@@ -96,20 +96,7 @@ void clear_seconds(){
 
 
 void change_state(){
-
-  if (watchState == 0)
-  {
-    watchState = 1;
-  }
-
-  else if (watchState == 1)
-  {
-    watchState = 2;
-  }
-  else if (watchState == 2)
-  {
-    watchState = 0;
-  }
+watchState = (watchState +1 ) % 3;
 }
 
 
@@ -128,12 +115,9 @@ int getRotation(){
   anyRotationState = digitalRead(outputA);
   if (anyRotationState != lastAnyRotationState){
     Serial.println("wasRotation");
-  bState = digitalRead(outputB);
-    Serial.println("anyRotationState");
-  Serial.println(anyRotationState);
-  Serial.println("lastAnyRotationState");
-  Serial.println(lastAnyRotationState);
-  lastAnyRotationState = anyRotationState;
+ 
+    Serial.println(lastAnyRotationState);
+    lastAnyRotationState = anyRotationState;
     if (isRightRotation(anyRotationState, bState)){
       return 1;
     }
@@ -148,10 +132,10 @@ int getRotation(){
 
 int isRightRotation(int aState, int bState){
   if (aState == 0 && bState == 1){
-    Serial.println("left");
+    //Serial.println("left");
       return 1;
   }
-  Serial.println("right");
+  //Serial.println("right");
   return 0;
 }
 
@@ -160,12 +144,10 @@ int isPushButonPressed(){
   
     buttonState = digitalRead(pushButton);
   if (buttonState != prevButtonState){
-    Serial.println("isPushButonPressed");
-    Serial.print("ButtonState: ");
+    Serial.println("PushButonPressed");
     Serial.println(buttonState);
     pushButtonCounter++;
     prevButtonState = buttonState;
-    delay(100);
     return 1;
   }
   prevButtonState = buttonState;
@@ -206,7 +188,16 @@ void increment_minutes(){
    // If the previous and the current state of the outputA are different, that means a Pulse has occured
    if (minuteState != lastMinuteState){     
      // If the outputB state is different to the outputA state, that means the encoder is rotating clockwise
-     if (digitalRead(outputB) != minuteState) { 
+   int stateB = digitalRead(outputB);
+   
+   stateB = digitalRead(outputB);
+    
+     Serial.println("State A");
+   Serial.println(minuteState);
+   Serial.println("State B");
+   Serial.println(stateB);
+   
+     if (stateB != minuteState) { 
        currentTime += 60;
      } else {
      if(currentTime>59){
@@ -259,7 +250,7 @@ String get_blinking_timestamp(int h, int m, int s){
       timestamp = "  :" + format_digits(m) + ":" + format_digits(s);
       break;
     case 2:
-      timestamp = format_digits(h) + ":" + "  " + ":" + format_digits(s);
+      timestamp = format_digits(h) + ":  :" + format_digits(s);
       break;
     }
   return timestamp;
@@ -323,7 +314,6 @@ String format_digits(int i)
 void display_on_watch(String timestamp){
   lcd.setCursor(0, 0);
   lcd.print(timestamp);
-  Serial.println(timestamp); 
 }
 
 
@@ -333,7 +323,6 @@ void manage_states(){
     case 0:
       increment_hours();
       break;
-    
     case 1:
       increment_minutes();
       break;
