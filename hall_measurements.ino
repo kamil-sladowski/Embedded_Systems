@@ -59,6 +59,7 @@ void loop ()
 void prepare_clock()
 {
   // initialize Timer1
+  TCNT1=0;
   cli();  // disable global interrupts
   TCCR1A = 0; // set entire TCCR1A register to 0
   TCCR1B = 0; // same for TCCR1B
@@ -82,7 +83,7 @@ ISR(TIMER1_COMPA_vect)
 {
   increment_time();
   String timestamp = get_timestamp();
-  //read_maesurement(timestamp);
+  read_maesurement(timestamp);
   manage_states();
   display_on_watch(timestamp);
 }
@@ -136,8 +137,9 @@ int getRotation(){
     if (isRightRotation(anyRotationState, bState)){
       return 1;
     }
-    return -1;
-  
+  else{
+      return -1;
+  }
   } 
    lastAnyRotationState = anyRotationState;
    return 0;
@@ -158,12 +160,12 @@ int isPushButonPressed(){
   
     buttonState = digitalRead(pushButton);
   if (buttonState != prevButtonState){
-      Serial.println("isPushButonPressed");
+    Serial.println("isPushButonPressed");
     Serial.print("ButtonState: ");
     Serial.println(buttonState);
     pushButtonCounter++;
-  prevButtonState = buttonState;
-  delay(100);
+    prevButtonState = buttonState;
+    delay(100);
     return 1;
   }
   prevButtonState = buttonState;
@@ -225,6 +227,9 @@ void clearSecondsIfAppropiateState(){
 
 
 void increment_time(){
+  if(time<0){
+   time=0; 
+  }
   time++;
 }
 
@@ -315,12 +320,6 @@ String format_digits(int i)
 
 void display_on_watch(String timestamp){
   lcd.setCursor(0, 0);
-  
-  lcd.print("time:");
-  delay(100); 
-  
-  lcd.setCursor(0, 1);
-
   lcd.print(timestamp);
   Serial.println(timestamp); 
 }
