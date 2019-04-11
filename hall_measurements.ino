@@ -34,13 +34,15 @@ int measurements[400];
 int buttonState=0;
 int prevButtonState=0;
 
-int pushButton = 0;
+int pushButton = 11;
+
 
 void setup(void) {
   pinMode (led, OUTPUT); 
   pinMode(analogPin, INPUT);
   pinMode(outputA, INPUT);
   pinMode(outputB, INPUT); 
+  pinMode(pushButton, INPUT); 
   Serial.begin(9600);
   lcd.begin(16, 2);
   prepare_clock();
@@ -49,6 +51,8 @@ void setup(void) {
 
 void loop ()
 {
+  
+  //delay(100);
 }
 
 
@@ -78,7 +82,7 @@ ISR(TIMER1_COMPA_vect)
 {
   increment_time();
   String timestamp = get_timestamp();
-  read_maesurement(timestamp);
+  //read_maesurement(timestamp);
   manage_states();
   display_on_watch(timestamp);
 }
@@ -122,8 +126,13 @@ int getRotation(){
   int bState;
   anyRotationState = digitalRead(outputA);
   if (anyRotationState != lastAnyRotationState){
-    bState = digitalRead(outputB);
-    
+    Serial.println("wasRotation");
+  bState = digitalRead(outputB);
+    Serial.println("anyRotationState");
+  Serial.println(anyRotationState);
+  Serial.println("lastAnyRotationState");
+  Serial.println(lastAnyRotationState);
+  lastAnyRotationState = anyRotationState;
     if (isRightRotation(anyRotationState, bState)){
       return 1;
     }
@@ -137,19 +146,24 @@ int getRotation(){
 
 int isRightRotation(int aState, int bState){
   if (aState == 0 && bState == 1){
+    Serial.println("left");
       return 1;
   }
+  Serial.println("right");
   return 0;
 }
 
 
 int isPushButonPressed(){
+  
     buttonState = digitalRead(pushButton);
   if (buttonState != prevButtonState){
-      
+      Serial.println("isPushButonPressed");
     Serial.print("ButtonState: ");
     Serial.println(buttonState);
     pushButtonCounter++;
+  prevButtonState = buttonState;
+  delay(100);
     return 1;
   }
   prevButtonState = buttonState;
@@ -313,7 +327,6 @@ void display_on_watch(String timestamp){
 
 
 void manage_states(){ 
-
   if (getRotation() != 0 || isPushButonPressed()){
     switch(watchState){
     case 0:
@@ -325,6 +338,7 @@ void manage_states(){
       break;
     }
     if(isPushButonPressedTwice()){
+    Serial.println("PushButonPressedTwice");
       clearSecondsIfAppropiateState();
       change_state();
       pushButtonCounter=0;
