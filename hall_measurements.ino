@@ -2,7 +2,7 @@
 
 
 const int rs = 8, en = 9, d4 = 4, d5 = 5, d6 = 6, d7 = 7;
-LiquidCrystal lcd(12, 11, 5, 4, 3, 2);
+LiquidCrystal lcd(8,9,4,5,6,7);
 
 int led = 13 ; 
 int analogPin = A0; // linear Hall magnetic sensor analog interface
@@ -29,8 +29,12 @@ int lastAnyRotationState = 0;
 
 int pushButtonCounter = 0;
 
-int measurements[100000];
+int measurements[400];
 
+int buttonState=0;
+int prevButtonState=0;
+
+int pushButton = 0;
 
 void setup(void) {
   pinMode (led, OUTPUT); 
@@ -72,105 +76,105 @@ void prepare_clock()
 
 ISR(TIMER1_COMPA_vect)
 {
-	increment_time();
-	String timestamp = get_timestamp();
-	read_maesurement(timestamp);
-	manage_states();
-	display_on_watch(timestamp);
+  increment_time();
+  String timestamp = get_timestamp();
+  read_maesurement(timestamp);
+  manage_states();
+  display_on_watch(timestamp);
 }
 
 
 void clear_seconds(){
-	int* hms = format_time();
-	time = time - hms[2];
+  int* hms = format_time();
+  time = time - hms[2];
 }
 
 
 void change_state(){
 
-	if (watchState == 0)
-	{
-		watchState = 1;
-	}
+  if (watchState == 0)
+  {
+    watchState = 1;
+  }
 
-	else if (watchState == 1)
-	{
-		watchState = 2;
-	}
-	else if (watchState == 2)
-	{
-		watchState = 0;
-	}
+  else if (watchState == 1)
+  {
+    watchState = 2;
+  }
+  else if (watchState == 2)
+  {
+    watchState = 0;
+  }
 }
 
 
 void clear_state(){
-	watchState = 0;
+  watchState = 0;
 }
 
 
 int isInIdleState(){
-	return watchState==0;
+  return watchState==0;
 }
 
 
 int getRotation(){
-	int bState;
-	anyRotationState = digitalRead(outputA);
-	if (anyRotationState != lastAnyRotationState){
-		bState = digitalRead(outputB)
-		
-		if (isRightRotation(int anyRotationState, int bState)){
-			return 1;
-		}
-		return -1;
-	
-	} 
+  int bState;
+  anyRotationState = digitalRead(outputA);
+  if (anyRotationState != lastAnyRotationState){
+    bState = digitalRead(outputB);
+    
+    if (isRightRotation(anyRotationState, bState)){
+      return 1;
+    }
+    return -1;
+  
+  } 
    lastAnyRotationState = anyRotationState;
    return 0;
 }
 
 
 int isRightRotation(int aState, int bState){
-	if (aState == 0 && bState == 1){
-	    return 1;
-	}
-	return 0;
+  if (aState == 0 && bState == 1){
+      return 1;
+  }
+  return 0;
 }
 
 
 int isPushButonPressed(){
     buttonState = digitalRead(pushButton);
-	if (buttonState != prevButtonState){
-	    
-		Serial.print("ButtonState: ");
-		Serial.println(buttonState);
-		pushButtonCounter++;
-		return 1;
-	}
-	prevButtonState = buttonState;
-	return 0;
+  if (buttonState != prevButtonState){
+      
+    Serial.print("ButtonState: ");
+    Serial.println(buttonState);
+    pushButtonCounter++;
+    return 1;
+  }
+  prevButtonState = buttonState;
+  return 0;
 }
 
 int isPushButonPressedTwice(){
-	return pushButtonCounter == 2;
+  return pushButtonCounter == 2;
 }
 
 
 void increment_hours(){
-	
+  
     hourState = digitalRead(outputA); // Reads the "current" state of the outputA
    // If the previous and the current state of the outputA are different, that means a Pulse has occured
    if (hourState != lastHourState){     
      // If the outputB state is different to the outputA state, that means the encoder is rotating clockwise
      if (digitalRead(outputB) != hourState) { 
-     	if (time < 82800){
-  		    time += 3600;
-  		}
+      if (time < 82800){
+          time += 3600;
+      }
      } else {
-     	if (time > 3600){
-       		time -= 3600;
-       	}
+      if (time > 3600){
+          time -= 3600;
+        }
      }
     
      Serial.print("current time: ");
@@ -181,7 +185,7 @@ void increment_hours(){
 
 
 void increment_minutes(){
-	
+  
     minuteState = digitalRead(outputA); // Reads the "current" state of the outputA
    // If the previous and the current state of the outputA are different, that means a Pulse has occured
    if (minuteState != lastMinuteState){     
@@ -200,43 +204,43 @@ void increment_minutes(){
 
 
 void clearSecondsIfAppropiateState(){
-	if(watchState == 2){
-		clear_seconds();
-	}
+  if(watchState == 2){
+    clear_seconds();
+  }
 }
 
 
 void increment_time(){
-	time++;
+  time++;
 }
 
 
 void read_maesurement(String timestamp){
-	int analogHall = analogRead(analogPin); 
+  int analogHall = analogRead(analogPin); 
     Serial.println("Time  |  Timestamp  |  analogHall");
-	Serial.print(time);
-	Serial.print("  |  ");
-	Serial.print(timestamp);
-	Serial.print("  |  ");
-	Serial.print(analogHall);
-	Serial.println("");
-	measurements[time] = analogHall;
+  Serial.print(time);
+  Serial.print("  |  ");
+  Serial.print(timestamp);
+  Serial.print("  |  ");
+  Serial.print(analogHall);
+  Serial.println("");
+  measurements[time] = analogHall;
 }
 
 
 String get_blinking_timestamp(int h, int m, int s){
-	String timestamp;
-	switch(watchState){
-		case 0:
-			timestamp = format_digits(h) + ":" + format_digits(m) + ":" + format_digits(s);
-			break;
-		case 1:
-			timestamp = "  " + ":" + format_digits(m) + ":" + format_digits(s);
-			break;
-		case 2:
-			timestamp = format_digits(h) + ":" + "  " + ":" + format_digits(s);
-			break;
-		}
+  String timestamp;
+  switch(watchState){
+    case 0:
+      timestamp = format_digits(h) + ":" + format_digits(m) + ":" + format_digits(s);
+      break;
+    case 1:
+      timestamp = "  :" + format_digits(m) + ":" + format_digits(s);
+      break;
+    case 2:
+      timestamp = format_digits(h) + ":" + "  " + ":" + format_digits(s);
+      break;
+    }
   return timestamp;
 }
 
@@ -310,34 +314,33 @@ void display_on_watch(String timestamp){
 
 void manage_states(){ 
 
-	if (getRotation() != 0 || isPushButonPressed()){
-		switch(watchState){
-		case 0:
-			increment_hours();
-			break;
-		
-		case 1:
-			increment_minutes();
-			break;
-		}
-		if(isPushButonPressedTwice()){
-			clearSecondsIfAppropiateState();
-			change_state();
-			pushButtonCounter=0;
-		}
-		
-	}
-	else if (!isInIdleState()){
-		if(timeInNoneIdleState < MAX_IDLE_TIME){
-        	timeInNoneIdleState++;
-		}
-		else{
-			clearSecondsIfAppropiateState();
-			change_state();
-			timeInNoneIdleState = 0;
-		}
-	}
+  if (getRotation() != 0 || isPushButonPressed()){
+    switch(watchState){
+    case 0:
+      increment_hours();
+      break;
+    
+    case 1:
+      increment_minutes();
+      break;
+    }
+    if(isPushButonPressedTwice()){
+      clearSecondsIfAppropiateState();
+      change_state();
+      pushButtonCounter=0;
+    }
+    
+  }
+  else if (!isInIdleState()){
+    if(timeInNoneIdleState < MAX_IDLE_TIME){
+          timeInNoneIdleState++;
+    }
+    else{
+      clearSecondsIfAppropiateState();
+      change_state();
+      timeInNoneIdleState = 0;
+    }
+  }
 }
-
 
 
