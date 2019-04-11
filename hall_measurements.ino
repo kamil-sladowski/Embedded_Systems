@@ -11,7 +11,7 @@ int i =0;
 int outputA = 12;
 int outputB = 13;
 
-int time = 60; // todo 0
+int currentTime = 0;
 int blinking_mode = 1;
 int need_blinking_string = 0;
 
@@ -29,7 +29,7 @@ int lastAnyRotationState = 0;
 
 int pushButtonCounter = 0;
 
-int measurements[400];
+int measurements[100];
 
 int buttonState=0;
 int prevButtonState=0;
@@ -91,7 +91,7 @@ ISR(TIMER1_COMPA_vect)
 
 void clear_seconds(){
   int* hms = format_time();
-  time = time - hms[2];
+  currentTime = currentTime - hms[2];
 }
 
 
@@ -184,17 +184,17 @@ void increment_hours(){
    if (hourState != lastHourState){     
      // If the outputB state is different to the outputA state, that means the encoder is rotating clockwise
      if (digitalRead(outputB) != hourState) { 
-      if (time < 82800){
-          time += 3600;
+      if (currentTime < 82799){
+          currentTime += 3600;
       }
      } else {
-      if (time > 3600){
-          time -= 3600;
+      if (currentTime > 3599){
+          currentTime -= 3600;
         }
      }
     
-     Serial.print("current time: ");
-     Serial.println(time);
+     Serial.print("current currentTime: ");
+     Serial.println(currentTime);
    } 
    lastHourState = hourState;
 }
@@ -207,12 +207,14 @@ void increment_minutes(){
    if (minuteState != lastMinuteState){     
      // If the outputB state is different to the outputA state, that means the encoder is rotating clockwise
      if (digitalRead(outputB) != minuteState) { 
-       time += 60;
+       currentTime += 60;
      } else {
-       time -= 60;
+     if(currentTime>59){
+      currentTime -= 60;
      }
-     Serial.print("current time: ");
-     Serial.println(time);
+     }
+     Serial.print("current currentTime: ");
+     Serial.println(currentTime);
    } 
    lastMinuteState = minuteState;
 
@@ -227,23 +229,23 @@ void clearSecondsIfAppropiateState(){
 
 
 void increment_time(){
-  if(time<0){
-   time=0; 
+  if(currentTime<0){
+   currentTime=0; 
   }
-  time++;
+  currentTime++;
 }
 
 
 void read_maesurement(String timestamp){
   int analogHall = analogRead(analogPin); 
     Serial.println("Time  |  Timestamp  |  analogHall");
-  Serial.print(time);
+  Serial.print(currentTime);
   Serial.print("  |  ");
   Serial.print(timestamp);
   Serial.print("  |  ");
   Serial.print(analogHall);
   Serial.println("");
-  measurements[time] = analogHall;
+  measurements[currentTime] = analogHall;
 }
 
 
@@ -274,7 +276,7 @@ int* format_time(){
   int h = 0;
   int m = 0;
   int s = 0;
-  int t = time;
+  int t = currentTime;
   h = t / 3600;
   t = t % (3600*h);
   m = t / 60;
