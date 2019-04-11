@@ -114,9 +114,6 @@ int getRotation(){
   int bState;
   anyRotationState = digitalRead(outputA);
   if (anyRotationState != lastAnyRotationState){
-    Serial.println("wasRotation");
- 
-    Serial.println(lastAnyRotationState);
     lastAnyRotationState = anyRotationState;
     if (isRightRotation(anyRotationState, bState)){
       return 1;
@@ -132,10 +129,9 @@ int getRotation(){
 
 int isRightRotation(int aState, int bState){
   if (aState == 0 && bState == 1){
-    //Serial.println("left");
       return 1;
   }
-  //Serial.println("right");
+  
   return 0;
 }
 
@@ -144,8 +140,6 @@ int isPushButonPressed(){
   
     buttonState = digitalRead(pushButton);
   if (buttonState != prevButtonState){
-    Serial.println("PushButonPressed");
-    Serial.println(buttonState);
     pushButtonCounter++;
     prevButtonState = buttonState;
     return 1;
@@ -174,9 +168,7 @@ void increment_hours(){
           currentTime -= 3600;
         }
      }
-    
-     Serial.print("current currentTime: ");
-     Serial.println(currentTime);
+   
    } 
    lastHourState = hourState;
 }
@@ -191,11 +183,6 @@ void increment_minutes(){
    int stateB = digitalRead(outputB);
    
    stateB = digitalRead(outputB);
-    
-     Serial.println("State A");
-   Serial.println(minuteState);
-   Serial.println("State B");
-   Serial.println(stateB);
    
      if (stateB != minuteState) { 
        currentTime += 60;
@@ -204,8 +191,7 @@ void increment_minutes(){
       currentTime -= 60;
      }
      }
-     Serial.print("current currentTime: ");
-     Serial.println(currentTime);
+    
    } 
    lastMinuteState = minuteState;
 
@@ -229,7 +215,7 @@ void increment_time(){
 
 void read_maesurement(String timestamp){
   int analogHall = analogRead(analogPin); 
-    Serial.println("Time  |  Timestamp  |  analogHall");
+    Serial.println("Time  |  Timestamp  |  Hall value");
   Serial.print(currentTime);
   Serial.print("  |  ");
   Serial.print(timestamp);
@@ -328,7 +314,6 @@ void manage_states(){
       break;
     }
     if(isPushButonPressedTwice()){
-    Serial.println("PushButonPressedTwice");
       clearSecondsIfAppropiateState();
       change_state();
       pushButtonCounter=0;
@@ -346,5 +331,4 @@ void manage_states(){
     }
   }
 }
-
 
